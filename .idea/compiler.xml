@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="queue-project-entities" />
+        <module name="queue-project-eureka" />
+        <module name="queue-project-service-businessManage" />
+        <module name="queue-project-service-materialsManage" />
+        <module name="queue-project-service-messageManage" />
+        <module name="queue-project-service-messagemanage" />
+        <module name="queue-project-service-queueManage" />
+        <module name="queue-project-service-staffManage" />
+        <module name="queue-project-service-userManage" />
+        <module name="queue-project-service-windowManage" />
+        <module name="queue-project-zuul" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="queue-project-materialsManage" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

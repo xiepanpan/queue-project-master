@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper  namespace="com.queue.mapper.StaffMapper">
+    <select id="getStaffList" parameterType="com.queue.pojo.Staff" resultType="com.queue.pojo.Staff">
+        select s.id as id,s.staff_no as staffNo,s.staff_name as staffName
+        from tb_staff s
+        where 1=1
+        <if test="id!=null and id!=''">
+            and s.id=#{id}
+        </if>
+        <if test="staffNo!=null and staffNo!=''">
+            and s.staff_no=#{staffNo}
+        </if>
+        <if test="staffName!=null and staffName!=''">
+            and s.staff_name=#{staffName}
+        </if>
+        order by s.create_time desc
+    </select>
+
+    <insert id="insertStaff" parameterType="com.queue.pojo.Staff" >
+        insert into tb_staff(staff_no,staff_name)
+        values (#{staffNo},#{staffName})
+    </insert>
+
+
+    <update id="updateStaff" parameterType="com.queue.pojo.Staff" >
+        update tb_staff
+        set staff_no=#{staffNo},staff_name=#{staffName}
+        where id=#{id}
+    </update>
+    <delete id="deleteStaff" parameterType="com.queue.pojo.Staff">
+        delete from tb_staff
+        where id=#{id}
+    </delete>
+</mapper>

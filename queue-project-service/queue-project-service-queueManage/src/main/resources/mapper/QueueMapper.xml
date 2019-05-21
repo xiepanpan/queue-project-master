@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.queue.mapper.QueueMapper">
+    <select id="getQueueList" parameterType="com.queue.pojo.Queues" resultType="com.queue.pojo.Queues">
+        select q.id as id,q.queue_no as queueNo,q.user_id as userId,u.user_no as userNo,b.id as
+        businessId,b.business_name as businessName,
+        w.id as windowId,w.window_no as windowNo,q.create_time as createTime,q.queue_num as queueNum,q.queue_num*2 as
+        waitTime,q.handler as handler,
+        q.transact as transact,w.staff_id as staffId,s.staff_name as staffName,
+        case when q.transact=0 then '未办理' when q.transact=1 then '待办理' when q.transact=2 then '已过号' when q.transact=3
+        then '已办理' end as transactName
+        from tb_queue q
+        left join tb_user u on u.id=q.user_id
+        left join tb_business b on b.id=q.business_id
+        left join tb_window w on w.id=q.window_id
+        left join tb_staff s on w.staff_id=s.id
+        where 1=1
+        <if test="windowId!=null">
+            and q.window_id=#{windowId}
+        </if>
+        <if test="userId!=null">
+            and u.id=#{userId}
+        </if>
+        <if test="handler!=null and handler!=''">
+            and q.handler=#{handler}
+        </if>
+        <if test="transact!=null">
+            and q.transact=#{transact}
+        </if>
+        <if test="queueNum!=null">
+            and q.queue_num=#{queueNum}
+        </if>
+        <if test="businessId!=null">
+            and q.business_id=#{businessId}
+        </if>
+        <if test="staffNo!=null and staffNo!=''">
+            and s.staff_no =#{staffNo}
+        </if>
+    </select>
+
+    <insert id="addQueue" parameterType="com.queue.pojo.Queues">
+        insert into tb_queue(queue_no,user_id,business_id,window_id,queue_num,create_time,handler,transact)
+        values(#{queueNo},#{userId},#{businessId},#{windowId},#{queueNum},now(),#{handler},#{transact});
+        <if test="windowId==null">
+            update tb_business set wait_num =wait_num+1 where id=#{businessId};
+        </if>
+        update tb_window set transact=1 where id=#{windowId};
+    </insert>
+
+    <update id="transactQueue" parameterType="com.queue.pojo.Queues">
+        update tb_queue set transact=3 where id=#{id};
+        update tb_queue set transact=1,window_id=#{windowId},queue_num=0
+        where queue_num=1 and business_id =#{businessId};
+        update tb_queue set queue_num=queue_num-1 where transact=0 and business_id=#{businessId};
+        update tb_window set business_now_num=business_now_num+1 where id=#{windowId};
+    </update>
+    <update id="updateWindowStatus" parameterType="com.queue.pojo.Window">
+        update tb_window set window_status=#{windowStatus} where id =#{id}
+    </update>
+
+    <update id="overQueue" parameterType="com.queue.pojo.Queues">
+         update tb_queue set transact=2 where id=#{id};
+         update tb_queue set transact=1,window_id=#{windowId},queue_num=0
+         where queue_num=1 and business_id =#{businessId};
+         update tb_queue set queue_num=queue_num-1 where business_id=#{businessId} and transact =0;
+    </update>
+
+
+    <update id="jumpQueue" parameterType="com.queue.pojo.Queues">
+        update tb_queue set queue_num=${queueNum}+1,transact=0 where id=#{id};
+    </update>
+
+    <update id="updateBusiness" parameterType="com.queue.pojo.Business">
+        update tb_business set wait_num=wait_num-1 where id=#{id};
+    </update>
+
+    <select id="selectBusiness" parameterType="com.queue.pojo.Business" resultType="com.queue.pojo.Business">
+        select id as id, business_no as businessNo, business_name as businessName,wait_num as waitNum
+        from tb_business where 1=1 and id=#{id}
+    </select>
+
+
+    <delete id="repealQueue" parameterType="com.queue.pojo.Queues">
+        delete from tb_queue where id=#{id};
+        update tb_queue set queue_num=queue_num-1
+        where transact=0 and queue_num &gt; #{queueNum} and business_id=#{businessId};
+        update tb_business set wait_num =wait_num-1 where id=#{businessId};
+    </delete>
+
+    <select id="selectWindow" parameterType="com.queue.pojo.Window" resultType="com.queue.pojo.Window">
+        select w.id as id,w.window_no as windowNo,w.business_id as businessId,b.business_no as
+        businessNo,b.business_name as businessName,
+        w.status as status,w.business_num as businessNum,w.business_now_num as businessNowNum,w.window_status as
+        windowStatus,
+        w.staff_id as staffId,s.staff_no as staffNo,s.staff_name as staffName,count(q.user_id) as waitNum,
+        w.transact as transact,
+        case when w.transact=1 then '正在办理业务' when w.transact=0 then '没有业务正在办理' end as transactName,
+        case when w.status=0 then '关闭' when w.status=1 then '开放' end as statusName,
+        case when w.window_status=0 then '空闲' when w.window_status=1 then '已满' end as windowStatusName
+        from tb_window w
+        left join tb_staff s on w.staff_id = s.id
+        left join tb_business b on w.business_id = b.id
+        left join tb_queue q on w.id = q.window_id
+        where 1=1
+        <if test="id != null">
+            and w.id = #{id}
+        </if>
+        <if test="businessId!=null">
+            and w.business_id=#{businessId}
+        </if>
+        <if test="status!=null">
+            and w.status=#{status}
+        </if>
+        <if test="windowStatus!=null">
+            and w.window_status=#{windowStatus}
+        </if>
+        <if test="staffNo!=null and staffNo!=''">
+            and w.staff_no=#{staffNo}
+        </if>
+        group by w.id,s.staff_no,s.staff_name
+        order by w.create_time desc,waitNum
+    </select>
+
+    <update id="updateWindow" parameterType="com.queue.pojo.Window">
+        update  tb_window set transact=0 where id=#{id}
+    </update>
+</mapper>
